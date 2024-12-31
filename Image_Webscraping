@@ -1,0 +1,49 @@
+import requests
+from bs4 import BeautifulSoup
+import os
+
+# URL of the page to scrape
+url = "https://nigeriapropertycentre.com/for-rent/flats-apartments/abuja/asokoro-district/2603625-3-bedroom-apartment-with-bq"
+
+# Send a GET request to the webpage
+response = requests.get(url)
+
+# Parse the HTML content using BeautifulSoup
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Find all image tags with the specified class
+images = soup.find_all('img', {'itemprop': 'image', 'class': 'primary-image img-responsive js-p-image'})
+
+# Define the folder where images will be saved (in your Downloads folder)
+download_folder = r"C:\Users\HP\Downloads\images"
+
+# Create the folder if it doesn't exist
+if not os.path.exists(download_folder):
+    os.makedirs(download_folder)
+
+# Loop through each image and download it
+for i, img in enumerate(images):
+    img_url = img.get('src')
+    
+    # Check if the image URL is complete, otherwise prepend the base URL
+    if img_url and img_url.startswith('http'):
+        img_full_url = img_url
+    else:
+        img_full_url = 'https://nigeriapropertycentre.com' + img_url
+
+    # Modify the URL by adding "/thumbs/" before the image path
+    modified_img_url = img_full_url.replace('properties/images/', 'properties/images/thumbs/')
+    
+    # Send a request to download the image
+    img_data = requests.get(modified_img_url).content
+    
+    # Define the full path to save the image
+    img_path = os.path.join(download_folder, f'image_{i+1}.jpg')
+    
+    # Save the image
+    with open(img_path, 'wb') as f:
+        f.write(img_data)
+    
+    print(f"Downloaded image {i+1} from {modified_img_url} to {img_path}")
+
+print("All images have been downloaded.")
